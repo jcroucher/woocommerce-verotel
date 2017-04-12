@@ -9,3 +9,5 @@ This fork adds
  
 The FlexPay files are from https://github.com/verotel/flexpay-php-client
 I have included them here for ease of use.
+
+Note this plugin has not been used in production and further testing is recommended.
