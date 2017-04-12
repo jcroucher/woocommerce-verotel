@@ -7,3 +7,5 @@ This fork adds
   - FlexPay 3.4 API
   
  
+The FlexPay files are from https://github.com/verotel/flexpay-php-client
+I have included them here for ease of use.
