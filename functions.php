@@ -30,7 +30,7 @@ function init_CardBilling() {
 
 	class WC_Gateway_CardBilling extends WC_Payment_Gateway {
 
-		private $currency = 'USD'; // Defaults to USD, can be set through admin
+		private $gateway_currency = 'USD'; // Defaults to USD, can be set through admin
 
 		function __construct()	
 		{	
@@ -63,6 +63,7 @@ function init_CardBilling() {
 			foreach ( $this->settings as $setting_key => $value ) {
 				$this->$setting_key = $value;
 			}
+
 
 			// Lets check for SSL
 			add_action( 'admin_notices', array( $this,	'do_ssl_check' ) );
@@ -182,6 +183,7 @@ function init_CardBilling() {
 			// Remove cart
 			$woocommerce->cart->empty_cart();
 
+
 			// The redirect URL goes to Verotel so the payment can be made
 			return array(
 				'result' => 'success',
@@ -201,7 +203,7 @@ function init_CardBilling() {
 			$params = array(
 				'shopID' => $this->shop_id,
 				'priceAmount' => $order->order_total,
-				'priceCurrency' =>  $this->currency,
+				'priceCurrency' =>  $this->gateway_currency,
 				'description' => 'Order '.$order->id,
 				'referenceID' => $order->id,
 				'email' => $order->billing_email,
@@ -210,9 +212,10 @@ function init_CardBilling() {
 //            	'custom3' => 'Custom 3',
             	'type' => 'purchase',
 			);
+			
 
 			// If the order contains a subscription process the order using the subscription message
-			if ( WC_Subscriptions_Order::order_contains_subscription( $order_id ) ) 
+			if ( $this->order_contains_subscription( $order->id ) ) 
 			{
 				$params['type'] = 'subscription';
 				$params['subscriptionType'] = 'recurring';
@@ -226,6 +229,7 @@ function init_CardBilling() {
 				// Standard purchase
 				$url = FlexPay::get_purchase_URL($this->sig_key,$params);	
 			}
+			
 			
 			return $url;
 		}
@@ -258,7 +262,7 @@ function init_CardBilling() {
 				$order->update_status( 'cancelled' );
 				$order->add_order_note( __( 'Cancel requested by user.','woocommerce-subscriptions' ), false, true );
 
-		       	if ( $this->order_contains_subscription( $order ) ) 
+		       	if ( $this->order_contains_subscription( $order->id ) ) 
 		       	{
 					WC_Subscriptions_Manager::cancel_subscriptions_for_order( $order );
 				}
@@ -441,7 +445,7 @@ function init_CardBilling() {
 		public function gateway_subscription_payment( $order ) {
 
 			// Make sure the order requested is a subscription, or contains a subscription.
-			if ( $this->order_contains_subscription( $order ) ) /*&& !$order->has_status( wcs_get_subscription_ended_statuses() )*/ 
+			if ( $this->order_contains_subscription( $order->id ) ) /*&& !$order->has_status( wcs_get_subscription_ended_statuses() )*/ 
 			{
 
 				$order->update_status( 'on-hold' );
@@ -478,7 +482,7 @@ function init_CardBilling() {
 			$order->update_status( 'cancelled' );
 			$order->add_order_note( __( 'Cancel requested by gateway.', 'woocommerce-subscriptions' ), false, true );
 
-	       	if ( $this->order_contains_subscription( $order ) ) /*&& !$order->has_status( wcs_get_subscription_ended_statuses() )*/ 
+	       	if ( $this->order_contains_subscription( $order->id ) ) /*&& !$order->has_status( wcs_get_subscription_ended_statuses() )*/ 
 	       	{
 				WC_Subscriptions_Manager::cancel_subscriptions_for_order( $order );
 			}
@@ -535,7 +539,7 @@ function init_CardBilling() {
 		 */
 		 function get_subscriptions_from_order( $order ) {
 
-			if ( $this->order_contains_subscription( $order ) ) {
+			if ( $this->order_contains_subscription( $order->id ) ) {
 
 				$subscriptions = wcs_get_subscriptions_for_order( $order );
 
@@ -557,8 +561,9 @@ function init_CardBilling() {
          * @param  WC_Order $order_id
          * @return bool
          */
-        function order_contains_subscription( $order ) {
-        	return ( wcs_is_subscription( $order ) || wcs_order_contains_subscription($order) );
+        function order_contains_subscription( $order_id ) {
+
+        	return ( wcs_is_subscription( $order_id ) || wcs_order_contains_subscription($order_id) || wcs_order_contains_renewal( $order_id ) );
         }
 
 		/**
