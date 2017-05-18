@@ -1,7 +1,7 @@
 # WooCommerce Verotel gateway plugin
 
 
-****** This has been merged, please visit https://github.com/speakdigital/Verotel-CardBilling-Payment-Gateway-for-WooCommerce
+* This has been merged, please visit https://github.com/speakdigital/Verotel-CardBilling-Payment-Gateway-for-WooCommerce *
 
 
 This is a fork of https://wordpress.org/plugins/woo-payment-gateway-verotel-cardbilling/
